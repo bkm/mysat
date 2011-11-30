@@ -19,7 +19,7 @@ class DimacsFile
 
 		void read();
 
-		SatProblem const* getProblem() const { return m_satProblem; }
+		SatProblem* getProblem() const { return m_satProblem; }
 
 	private :
 

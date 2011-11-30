@@ -39,27 +39,53 @@ class Conjunction {
 		Conjunct& operator[](int idx) { return m_conjuncts[idx]; }
 		const Conjunct& operator[](int idx) const { return m_conjuncts[idx]; }
 
+		Conjunct& at(int idx) { return m_conjuncts[idx]; }
+		const Conjunct& at(int idx) const { return m_conjuncts[idx]; }
+
 	private :
 		Conjunct m_conjuncts[Size];
 };
 
 typedef vector<Conjunction const*>::const_iterator ConjunctionIter;
 
+struct Backtrack {
+	int m_varId;
+	vector<Conjunction const*> m_clauses;
+	bool m_backtracked;
+
+	ConjunctionIter begin() const { return m_clauses.begin(); }
+	ConjunctionIter end() const { return m_clauses.end(); }
+};
+
+enum ConjunctVal {
+	True,
+	False,
+	Unset
+};
+
 class SatProblem {
 	public :
-		SatProblem(int numVars, int numClauses):
-			m_numVars(numVars),
-			m_numClauses(numClauses),
-			m_conjunctions(vector<Conjunction const*>()) { }
+		SatProblem(int numVars, int numClauses);
+		~SatProblem();
 
 		void addConjunction(Conjunction const* c) { m_conjunctions.push_back(c); }
+
+		bool solve(vector<Conjunct>&);
 
 		ConjunctionIter begin() const { return m_conjunctions.begin(); }
 		ConjunctionIter end() const { return m_conjunctions.end(); }
 
 	private :
+		const Conjunct& pick_var() const;
+		bool simplify();
+		bool backtrack();
+
 		int m_numVars;
 		int m_numClauses;
+
+		int m_index;
+		ConjunctVal *m_values;
+		Backtrack *m_backtracks;
 
 		vector<Conjunction const*> m_conjunctions;
 };
