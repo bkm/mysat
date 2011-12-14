@@ -28,6 +28,8 @@ class Conjunct {
 		bool m_isInverted;
 };
 
+typedef vector<Conjunct>::const_iterator ConjunctIter;
+
 class Conjunction {
 	public :
 		enum Size {
@@ -49,8 +51,13 @@ class Conjunction {
 typedef vector<Conjunction const*>::const_iterator ConjunctionIter;
 
 struct Backtrack {
+	Backtrack();
+
 	int m_varId;
 	vector<Conjunction const*> m_clauses;
+	vector<VarId> m_pureVars;
+	vector<VarId> m_uniteVars;
+
 	bool m_backtracked;
 
 	ConjunctionIter begin() const { return m_clauses.begin(); }
@@ -63,7 +70,36 @@ enum ConjunctVal {
 	Unset
 };
 
+class SatProblem;
+
+class SplitHeuristic {
+	public :
+		SplitHeuristic(SatProblem *s, int nVars);
+
+		bool next(vector<Conjunct>&);
+		void init();
+
+	protected :
+		SatProblem *m_problem;
+		int m_nVars;
+		vector<Conjunct> m_chosenVars;
+
+	private :
+		bool nextCombination();
+		bool m_moreCombination;
+};
+
+class FirstNHeuristic : public SplitHeuristic {
+	public :
+		FirstNHeuristic(SatProblem *s, int nVars):
+			SplitHeuristic(s, nVars) { }
+
+		void chooseVars();
+};
+
 class SatProblem {
+	friend class SplitHeuristic;
+
 	public :
 		SatProblem(int numVars, int numClauses);
 		~SatProblem();
@@ -75,8 +111,13 @@ class SatProblem {
 		ConjunctionIter begin() const { return m_conjunctions.begin(); }
 		ConjunctionIter end() const { return m_conjunctions.end(); }
 
+		size_t size() const { return m_conjunctions.size(); }
+
 	private :
-		const Conjunct& pick_var() const;
+		void detect_unite_clauses();
+		void detect_pure_literals();
+
+		bool pick_var(Conjunct& c) const;
 		bool simplify();
 		bool backtrack();
 
@@ -95,4 +136,3 @@ ostream& operator<<(ostream&, const Conjunction&);
 ostream& operator<<(ostream&, const SatProblem&);
 
 #endif // _SAT_H_
-
